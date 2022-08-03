@@ -41,7 +41,7 @@ describe("signUp Controller", () => {
 		expect(httpResponse.statusCode).toBe(400);
 		expect(httpResponse.body).toEqual(new MissingParamError("password"));
 	});
-	test("Shold return 400 if no passwordConfirmation is provided", () => {
+	test("Shold return 400 if no password confirmation is provided", () => {
 		const sut = new SignUpController();
 		const httpRequest = {
 			body: {
