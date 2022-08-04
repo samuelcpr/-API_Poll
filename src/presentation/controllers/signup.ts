@@ -7,6 +7,7 @@ import { InvalidParamError } from "../erros/invalid-param-error";
 
 export class SignUpController implements Controller {
 	private readonly emailValidator: EmailValidator;
+
 	constructor(emailValidator: EmailValidator) {
 		this.emailValidator = emailValidator;
 	}
