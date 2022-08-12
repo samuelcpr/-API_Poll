@@ -1,10 +1,11 @@
-import { Encrypter } from "./db-add-account-protocols";
+import {
+	Encrypter,
+	AddAccountModel,
+	AccountModel,
+	AddAccountRepository,
+} from "./db-add-account-protocols";
 import { DbAddAccount } from "./db-add-account";
 
-interface SutTypes {
-	sut: DbAddAccount;
-	encryptStub: Encrypter;
-}
 const makerEncrypter = (): Encrypter => {
 	class EncryptStub implements Encrypter {
 		async encrypt(value: string): Promise<string> {
@@ -14,12 +15,35 @@ const makerEncrypter = (): Encrypter => {
 	return new EncryptStub();
 };
 
+const makeAddAccountRepository = (): AddAccountRepository => {
+	class addAccountRepositoryStub implements AddAccountRepository {
+		async add(accountData: AddAccountModel): Promise<AccountModel> {
+			const fakeAccount = {
+				id: "valid_id",
+				name: "valid_name",
+				email: "valid_email",
+				password: "hashed_password",
+			};
+			return new Promise((resolve) => resolve(fakeAccount));
+		}
+	}
+	return new addAccountRepositoryStub();
+};
+
+interface SutTypes {
+	sut: DbAddAccount;
+	encryptStub: Encrypter;
+	addAccountRepositoryStub: AddAccountRepository;
+}
+
 const makeSut = (): SutTypes => {
 	const encryptStub = makerEncrypter();
-	const sut = new DbAddAccount(encryptStub);
+	const addAccountRepositoryStub = makeAddAccountRepository();
+	const sut = new DbAddAccount(encryptStub, addAccountRepositoryStub);
 	return {
 		sut,
 		encryptStub,
+		addAccountRepositoryStub,
 	};
 };
 
@@ -49,5 +73,20 @@ describe("DbAddAccount Usecase", () => {
 		};
 		const promise = sut.add(accountData);
 		await expect(promise).rejects.toThrow();
+	});
+	test("Should call AddAccountRepository with correct values", async () => {
+		const { sut, addAccountRepositoryStub } = makeSut();
+		const addSpy = jest.spyOn(addAccountRepositoryStub, "add");
+		const accountData = {
+			name: "valid_name",
+			email: "valid_email",
+			password: "valid_password",
+		};
+		await sut.add(accountData);
+		expect(addSpy).toHaveBeenCalledWith({
+			name: "valid_name",
+			email: "valid_email",
+			password: "hashed_password",
+		});
 	});
 });
